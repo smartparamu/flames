@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import './App.css';
 
 function App() {
@@ -7,16 +6,42 @@ function App() {
     const [name2, setName2] = useState('');
     const [result, setResult] = useState('');
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
+
+    const flamesResult = (name1, name2) => {
+        let str = name1 + name2;
+        let uniqueChars = str.replace(/[^a-zA-Z]/g, '').toLowerCase().split('');
+        
+        let flames = ['F', 'L', 'A', 'M', 'E', 'S'];
+        let count = uniqueChars.length;
+
+        while (flames.length > 1) {
+            let index = (count % flames.length) - 1;
+            if (index >= 0) {
+                flames.splice(index, 1);
+            } else {
+                flames.splice(flames.length - 1, 1);
+            }
+        }
+
+        const results = {
+            "F": "Friends",
+            "L": "Love",
+            "A": "Affection",
+            "M": "Marriage",
+            "E": "Enemy",
+            "S": "Siblings"
+        };
+
+        return results[flames[0]];
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setError('');
         setResult('');
 
         try {
-            const res = await axios.post('http://localhost:5001/flames', { name1, name2 });
+            const relationship = flamesResult(name1, name2);
             const relationshipEmojis = {
                 'Friends': '👥',
                 'Love': '❤️',
@@ -25,21 +50,15 @@ function App() {
                 'Enemy': '😠',
                 'Siblings': '👨‍👦'
             };
-            const relationship = res.data.result;
             const emoji = relationshipEmojis[relationship] || '';
             setResult(`${relationship} ${emoji}`);
             
-            // Play sound effect based on relationship
             try {
                 const audio = new Audio(`/sounds/${relationship.toLowerCase()}.mp3`);
                 await audio.play();
             } catch (error) {
                 console.error('Error playing sound:', error);
-                // Continue with the app flow even if sound fails
             }
-        } catch (err) {
-            console.error('API Error:', err);
-            setError('Failed to calculate result. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -76,7 +95,6 @@ function App() {
                 </button>
             </form>
 
-            {error && <p className="error">{error}</p>}
             {result && (
                 <div className="result">
                     <h2>Result:</h2>
@@ -86,8 +104,5 @@ function App() {
         </div>
     );
 }
-
-
-
 
 export default App;
